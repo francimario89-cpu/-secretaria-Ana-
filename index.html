@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     
-    <!-- Mapa de Importação Corrigido (Versão Única e Estável) -->
     <script type="importmap">
 {
   "imports": {
@@ -23,182 +22,18 @@
   }
 }
 </script>
-
-    <!-- Carregador Babel -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; overflow-x: hidden; }
-        #error-display { display: none; position: fixed; top: 0; left: 0; width: 100%; padding: 15px; background: #fee2e2; color: #991b1b; z-index: 9999; font-family: monospace; border-bottom: 2px solid #ef4444; font-size: 12px; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
         .whatsapp-bg { background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-repeat: repeat; background-attachment: fixed; }
     </style>
 </head>
 <body>
-    <div id="error-display"></div>
     <div id="root">
         <div class="flex flex-col items-center justify-center h-screen bg-slate-50">
             <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
             <p class="text-slate-500 font-bold animate-pulse">Ana está carregando os dados...</p>
         </div>
     </div>
-
-    <script>
-        // Captura detalhada de erros para depuração
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            const display = document.getElementById('error-display');
-            display.style.display = 'block';
-            display.innerHTML = '<b>Erro detectado:</b> ' + msg + '<br><small>Arquivo: ' + url + ' | Linha: ' + lineNo + '</small>';
-            console.error(error);
-            return false;
-        };
-    </script>
-
-    <script type="text/babel" data-type="module">
-        import React, { useState, useEffect, useRef } from 'react';
-        import { createRoot } from 'react-dom/client';
-        import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-        import { GoogleGenAI, Type } from "@google/genai";
-
-        // --- Lógica da IA ---
-        const processMessage = async (message, history) => {
-          const key = window.RENDER_ENV?.API_KEY || "";
-          if (!key || key.length < 10) throw new Error("API_KEY_MISSING");
-          
-          const ai = new GoogleGenAI({ apiKey: key });
-          const systemInstruction = `Você é a Ana, a secretária financeira pessoal do Francimário. Responda como se fosse no WhatsApp, com emojis e tom prestativo. Confirme registros de gastos e lembretes. Data: ${new Date().toLocaleDateString('pt-BR')}`;
-
-          const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: [
-              ...history.slice(-6).map(h => ({ role: h.role === 'user' ? 'user' : 'model', parts: [{ text: h.content }] })),
-              { role: 'user', parts: [{ text: message }] }
-            ],
-            config: {
-              systemInstruction,
-              responseMimeType: "application/json",
-              responseSchema: {
-                type: Type.OBJECT,
-                properties: {
-                  reply: { type: Type.STRING }
-                },
-                required: ["reply"]
-              }
-            }
-          });
-
-          return JSON.parse(response.text);
-        };
-
-        // --- Componentes ---
-        const Sidebar = () => {
-          const loc = useLocation();
-          return (
-            <div className="w-64 bg-slate-900 h-screen fixed left-0 top-0 hidden lg:flex flex-col border-r border-slate-800 text-white">
-              <div className="p-8 text-center border-b border-slate-800">
-                <h1 className="font-black text-2xl italic">FIN<span className="text-emerald-400">AI</span></h1>
-                <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Francimário</p>
-              </div>
-              <nav className="p-4 space-y-2 mt-4">
-                <Link to="/" className={`flex items-center gap-3 p-4 rounded-xl font-bold transition-all ${loc.pathname === '/' ? 'bg-emerald-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}>
-                  <i className="fas fa-chart-pie w-5"></i> Dashboard
-                </Link>
-                <Link to="/chat" className={`flex items-center gap-3 p-4 rounded-xl font-bold transition-all ${loc.pathname === '/chat' ? 'bg-emerald-500 text-slate-900' : 'text-slate-400 hover:text-white'}`}>
-                  <i className="fab fa-whatsapp w-5"></i> Ana (WhatsApp)
-                </Link>
-              </nav>
-            </div>
-          );
-        };
-
-        const Dashboard = () => (
-          <div className="p-8 lg:p-12 max-w-5xl mx-auto">
-            <h2 className="text-4xl font-black text-slate-900 mb-2">Olá, Francimário! 👋</h2>
-            <p className="text-slate-500 mb-10">Ana já organizou tudo por aqui.</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-              <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-                <p className="text-slate-400 text-xs font-bold uppercase mb-1">Saldo Atual</p>
-                <p className="text-3xl font-black">R$ 4.250,00</p>
-              </div>
-              <div className="bg-emerald-500 p-8 rounded-[2rem] shadow-lg text-white">
-                <p className="text-emerald-100 text-xs font-bold uppercase mb-1">Status</p>
-                <p className="text-xl font-bold">"Tudo certinho, Francimário!" ✅</p>
-              </div>
-            </div>
-
-            <Link to="/chat" className="block bg-emerald-50 border-2 border-dashed border-emerald-300 p-8 rounded-[2.5rem] text-center hover:bg-emerald-100 transition-all">
-              <span className="text-emerald-800 font-bold">Clique aqui para falar com a Ana</span>
-            </Link>
-          </div>
-        );
-
-        const Chat = () => {
-          const [messages, setMessages] = useState([{ id: '1', role: 'assistant', content: 'Oi Francimário! 🙋‍♀️ O que vamos organizar hoje?', timestamp: new Date().toISOString() }]);
-          const [input, setInput] = useState('');
-          const [loading, setLoading] = useState(false);
-          const scrollRef = useRef(null);
-
-          useEffect(() => {
-            if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-          }, [messages]);
-
-          const send = async () => {
-            if (!input.trim() || loading) return;
-            const msg = { id: Date.now().toString(), role: 'user', content: input, timestamp: new Date().toISOString() };
-            setMessages(prev => [...prev, msg]);
-            setInput('');
-            setLoading(true);
-
-            try {
-              const res = await processMessage(input, messages);
-              setMessages(prev => [...prev, { id: 'ai'+Date.now(), role: 'assistant', content: res.reply, timestamp: new Date().toISOString() }]);
-            } catch (err) {
-              setMessages(prev => [...prev, { id: 'err', role: 'assistant', content: "⚠️ Configure sua API_KEY no Render!", timestamp: new Date().toISOString() }]);
-            } finally { setLoading(false); }
-          };
-
-          return (
-            <div className="h-screen flex flex-col whatsapp-bg">
-              <header className="bg-[#075e54] text-white p-4 flex items-center gap-4 shadow-md z-10">
-                <Link to="/" className="lg:hidden"><i className="fas fa-arrow-left"></i></Link>
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center border border-white/30 overflow-hidden">
-                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ana" alt="Ana" />
-                </div>
-                <div><h2 className="font-bold text-sm">Ana Secretária</h2><p className="text-[10px] opacity-80">online</p></div>
-              </header>
-              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 pb-24">
-                {messages.map(m => (
-                  <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] p-3 rounded-xl shadow-sm text-sm ${m.role === 'user' ? 'bg-[#dcf8c6] rounded-tr-none' : 'bg-white rounded-tl-none'}`}>
-                      {m.content}
-                    </div>
-                  </div>
-                ))}
-                {loading && <div className="bg-white/80 p-2 rounded-full text-[10px] w-fit italic">Ana digitando...</div>}
-              </div>
-              <div className="fixed bottom-0 left-0 lg:left-64 right-0 p-3 bg-white/95 flex gap-2 items-center border-t border-slate-200">
-                <input value={input} onChange={e => setInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && send()} className="flex-1 p-3 px-5 bg-slate-100 rounded-full outline-none text-sm" placeholder="Mensagem" />
-                <button onClick={send} className="w-12 h-12 bg-[#075e54] text-white rounded-full flex items-center justify-center active:scale-90 transition-all"><i className="fas fa-paper-plane"></i></button>
-              </div>
-            </div>
-          );
-        };
-
-        const RootApp = () => (
-          <Router>
-            <div className="flex bg-slate-50 min-h-screen">
-              <Sidebar />
-              <main className="flex-1 lg:ml-64 min-h-screen">
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/chat" element={<Chat />} />
-                </Routes>
-              </main>
-            </div>
-          </Router>
-        );
-
-        createRoot(document.getElementById('root')).render(<RootApp />);
-    </script>
+    <script type="module" src="index.tsx"></script>
 </body>
 </html>
