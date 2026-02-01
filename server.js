@@ -21,7 +21,7 @@ const server = http.createServer((req, res) => {
     '.css': 'text/css',
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
-    '.tsx': 'text/javascript', // Babel vai processar isso
+    '.tsx': 'text/javascript',
     '.ts': 'text/javascript'
   };
 
@@ -29,18 +29,14 @@ const server = http.createServer((req, res) => {
 
   fs.readFile(filePath, (error, content) => {
     if (error) {
-      if(error.code == 'ENOENT') {
-        res.writeHead(404);
-        res.end('Arquivo não encontrado');
-      } else {
-        res.writeHead(500);
-        res.end('Erro no servidor: '+error.code);
-      }
+      res.writeHead(404);
+      res.end('Arquivo nao encontrado');
     } else {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       if (filePath === './index.html') {
         let html = content.toString();
-        // Injeta a chave do Render no navegador com segurança
-        const injection = `<script>window.RENDER_ENV = { API_KEY: "${apiKey}" };</script>`;
+        // Injeção limpa da API KEY
+        const injection = `\n<script>window.RENDER_ENV = { API_KEY: "${apiKey}" };</script>\n`;
         html = html.replace('</head>', injection + '</head>');
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(html, 'utf-8');
