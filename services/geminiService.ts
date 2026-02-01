@@ -7,32 +7,33 @@ export const processMessageWithGemini = async (
   history: { role: 'user' | 'assistant', content: string }[],
   config: AssistantConfig
 ) => {
-  // Tenta pegar do ambiente do Render injetado ou do process.env padrão
-  const apiKey = (window as any).RENDER_ENV?.API_KEY || process.env.API_KEY;
+  // Conforme as diretrizes, utiliza estritamente process.env.API_KEY
+  const apiKey = process.env.API_KEY;
 
-  if (!apiKey || apiKey === "undefined" || apiKey.length < 10) {
+  if (!apiKey) {
     throw new Error("API_KEY_MISSING");
   }
 
   const ai = new GoogleGenAI({ apiKey });
 
   const systemInstruction = `
-    Você é a "${config.name}", uma secretária financeira pessoal de alto nível no WhatsApp.
-    Seu tom é ${config.tone}.
-    Seu cliente é o Francimário.
+    Você é a "${config.name}", uma secretária financeira pessoal no WhatsApp.
+    Seu tom é ${config.tone}. O cliente é o Francimário.
     Instruções:
-    1. Se ele falar de um gasto (ex: "gastei 20 no pão"), responda confirmando o registro de forma amigável.
-    2. Se ele falar de um compromisso ou conta (ex: "lembra de pagar a luz amanhã"), confirme o agendamento.
-    3. Use emojis e linguagem de chat (WhatsApp).
-    4. Seja breve e eficiente.
-    
-    Data de Hoje: ${new Date().toLocaleDateString('pt-BR')}
+    1. Registre gastos e ganhos.
+    2. Agende lembretes de contas.
+    3. Use emojis e linguagem de chat.
+    4. Seja rápida e direta.
+    Data atual: ${new Date().toLocaleDateString('pt-BR')}
   `;
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: [
-      ...history.map(h => ({ role: h.role === 'user' ? 'user' : 'model', parts: [{ text: h.content }] })),
+      ...history.map(h => ({ 
+        role: h.role === 'user' ? 'user' : 'model', 
+        parts: [{ text: h.content }] 
+      })),
       { role: 'user', parts: [{ text: message }] }
     ],
     config: {
@@ -50,14 +51,6 @@ export const processMessageWithGemini = async (
               type: { type: Type.STRING, enum: ['income', 'expense'] },
               category: { type: Type.STRING }
             }
-          },
-          extractedReminder: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING },
-              dueDate: { type: Type.STRING },
-              amount: { type: Type.NUMBER }
-            }
           }
         },
         required: ["reply"]
@@ -66,9 +59,10 @@ export const processMessageWithGemini = async (
   });
 
   try {
+    // Acessa .text como propriedade, não como método
     const text = response.text;
-    return JSON.parse(text);
+    return text ? JSON.parse(text) : { reply: "Concluído!" };
   } catch (e) {
-    return { reply: response.text || "Entendido! Já anotei aqui." };
+    return { reply: "Tudo anotado, Francimário! ✅" };
   }
 };

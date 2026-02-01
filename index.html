@@ -25,15 +25,16 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; }
         .whatsapp-bg { background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-repeat: repeat; background-attachment: fixed; }
+        .ana-spinner { border-top-color: #10b981; animation: spinner 0.6s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div id="root">
         <div class="flex flex-col items-center justify-center h-screen bg-slate-50">
-            <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="text-slate-500 font-bold animate-pulse">Ana está carregando os dados...</p>
+            <div class="w-12 h-12 border-4 border-slate-200 rounded-full ana-spinner mb-4"></div>
+            <p class="text-slate-500 font-bold animate-pulse">Ana está carregando seus dados...</p>
         </div>
     </div>
-    <script type="module" src="index.tsx"></script>
 </body>
 </html>
