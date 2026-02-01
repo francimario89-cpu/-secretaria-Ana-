@@ -1,0 +1,13 @@
+
+{
+  "name": "financia-ai-secretaria",
+  "version": "1.0.0",
+  "description": "Assistente Financeira com IA",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx serve -s ."
+  },
+  "dependencies": {
+    "serve": "^14.2.0"
+  }
+}

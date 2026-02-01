@@ -1,0 +1,7 @@
+{
+  "name": "FinanciaAI - Secretária WhatsApp",
+  "description": "Uma assistente financeira inteligente que simula a integração com WhatsApp para organizar gastos, gerenciar lembretes e planejar sua vida financeira com IA.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
