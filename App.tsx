@@ -72,12 +72,12 @@ const Dashboard = () => (
 
 const Chat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const saved = localStorage.getItem('ana_chat_v3');
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem('ana_chat_v3');
+      if (saved) {
         return JSON.parse(saved).map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) }));
-      } catch (e) { return []; }
-    }
+      }
+    } catch (e) { console.error("Erro ao carregar histórico"); }
     return [{ id: '1', role: 'assistant', content: 'Oi Francimário! 🙋‍♀️ Pronta para organizar suas finanças hoje. O que você gastou?', timestamp: new Date() }];
   });
   
@@ -101,7 +101,7 @@ const Chat = () => {
       const result = await processMessageWithGemini(input, messages.map(m => ({ role: m.role, content: m.content })), { name: 'Ana', tone: 'friendly', whatsappNumber: '' });
       setMessages(prev => [...prev, { id: 'ai'+Date.now(), role: 'assistant', content: result.reply, timestamp: new Date() }]);
     } catch (e: any) {
-      setMessages(prev => [...prev, { id: 'err', role: 'assistant', content: "⚠️ Francimário, parece que estou sem conexão com minha inteligência agora. Verifique a chave da API!", timestamp: new Date() }]);
+      setMessages(prev => [...prev, { id: 'err', role: 'assistant', content: "⚠️ Francimário, parece que estou sem conexão agora. Verifique a chave da API!", timestamp: new Date() }]);
     } finally {
       setLoading(false);
     }
@@ -120,43 +120,32 @@ const Chat = () => {
             <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span> online agora
           </p>
         </div>
-        <div className="flex gap-4 opacity-80">
-          <i className="fas fa-video text-sm"></i>
-          <i className="fas fa-phone text-sm"></i>
-          <i className="fas fa-ellipsis-v text-sm"></i>
-        </div>
       </header>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 pb-24">
-        <div className="flex justify-center mb-4">
-          <span className="bg-[#e1f3fb] text-[#54656f] text-[10px] font-bold px-3 py-1 rounded-lg uppercase shadow-sm border border-white/50">Hoje</span>
-        </div>
         {messages.map((m) => (
-          <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}>
-            <div className={`max-w-[85%] p-3 rounded-xl shadow-sm text-sm relative ${m.role === 'user' ? 'bg-[#dcf8c6] rounded-tr-none' : 'bg-white rounded-tl-none font-medium text-slate-800'}`}>
+          <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[85%] p-3 rounded-xl shadow-sm text-sm relative ${m.role === 'user' ? 'bg-[#dcf8c6] rounded-tr-none' : 'bg-white rounded-tl-none text-slate-800'}`}>
               {m.content}
               <div className="flex items-center justify-end gap-1 mt-1 opacity-50">
                 <span className="text-[9px] font-bold">{m.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                {m.role === 'user' && <i className="fas fa-check-double text-[9px] text-blue-500"></i>}
               </div>
             </div>
           </div>
         ))}
         {loading && (
-          <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full text-[10px] font-black text-emerald-600 w-fit animate-pulse px-4 border border-emerald-100 shadow-sm">
+          <div className="bg-white/90 p-2 rounded-full text-[10px] font-black text-emerald-600 w-fit animate-pulse px-4 border border-emerald-100">
             ANA ESTÁ DIGITANDO...
           </div>
         )}
       </div>
 
       <div className="fixed bottom-0 left-0 lg:left-64 right-0 p-3 bg-[#f0f2f5] flex gap-2 items-center border-t border-slate-200">
-        <button className="text-slate-500 p-2"><i className="far fa-smile text-xl"></i></button>
-        <button className="text-slate-500 p-2"><i className="fas fa-plus text-lg"></i></button>
         <input 
           value={input} 
           onChange={e => setInput(e.target.value)} 
           onKeyPress={e => e.key === 'Enter' && send()} 
-          className="flex-1 p-3 px-5 bg-white rounded-full outline-none text-sm border border-transparent focus:border-emerald-300 transition-all shadow-sm" 
+          className="flex-1 p-3 px-5 bg-white rounded-full outline-none text-sm shadow-sm" 
           placeholder="Mensagem" 
         />
         <button onClick={send} className="w-12 h-12 bg-[#00a884] text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
