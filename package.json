@@ -5,7 +5,7 @@
   "description": "Assistente Financeira com IA",
   "main": "index.js",
   "scripts": {
-    "start": "npx serve -s ."
+    "start": "npx serve -s . -l 10000"
   },
   "dependencies": {
     "serve": "^14.2.0"
