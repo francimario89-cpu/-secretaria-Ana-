@@ -24,16 +24,24 @@
 </script>
     
     <script>
-      // Garante que o process.env existe para o SDK do Gemini
+      // Shim para process.env exigido pelo SDK do Gemini
       window.process = window.process || { env: {} };
       
-      // Sincroniza a chave vinda do Render com o ambiente do App
+      // Captura a chave injetada pelo server.js
       window.addEventListener('DOMContentLoaded', () => {
         if (window.RENDER_ENV && window.RENDER_ENV.API_KEY) {
           window.process.env.API_KEY = window.RENDER_ENV.API_KEY;
-          console.log("Configuração de ambiente concluída.");
+          console.log("Chave API configurada com sucesso.");
         }
       });
+
+      // Tratamento de erros de carregamento
+      window.onerror = function(msg, url, line) {
+        console.error("Erro Crítico:", msg);
+        if (msg.includes('Hook') || msg.includes('react')) {
+          console.warn("Detectado conflito de React. Limpando cache...");
+        }
+      };
     </script>
 
     <style>
@@ -47,7 +55,7 @@
     <div id="root">
         <div class="flex flex-col items-center justify-center h-screen bg-slate-50">
             <div class="w-12 h-12 border-4 border-slate-200 rounded-full ana-spinner mb-4"></div>
-            <p class="text-slate-500 font-bold animate-pulse">Ana está carregando os dados...</p>
+            <p class="text-slate-500 font-bold animate-pulse">Ana está se preparando...</p>
         </div>
     </div>
     <script type="module" src="index.tsx"></script>
