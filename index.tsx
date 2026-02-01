@@ -6,18 +6,14 @@ import App from './App.tsx';
 const init = () => {
   const container = document.getElementById('root');
   if (container) {
+    // Limpa o conteúdo do container (remove o loader) antes de montar o React
     const root = createRoot(container);
-    root.render(
-      <React.StrictMode>
-        <App />
-      </React.StrictMode>
-    );
+    root.render(<App />);
   }
 };
 
-// Executa a inicialização
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
   init();
+} else {
+  document.addEventListener('DOMContentLoaded', init);
 }
