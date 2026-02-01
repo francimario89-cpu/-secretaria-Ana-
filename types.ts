@@ -1,37 +1,37 @@
 
-export interface Transaction {
+export interface Appointment {
   id: string;
   description: string;
+  dateTime: string;
+  urgent: boolean;
+  status: 'pending' | 'completed';
+}
+
+export interface Expense {
+  id: string;
   amount: number;
-  type: 'income' | 'expense';
   category: string;
   date: string;
+  description: string;
 }
 
-export interface Reminder {
+export interface Birthday {
   id: string;
-  title: string;
-  dueDate: string;
-  status: 'pending' | 'completed';
-  amount?: number;
-}
-
-export interface AssistantConfig {
   name: string;
-  tone: 'professional' | 'friendly' | 'strict';
-  whatsappNumber: string;
+  date: string;
+  relation: string;
 }
 
-export interface ChatMessage {
+export interface Message {
   id: string;
-  role: 'user' | 'assistant';
-  content: string;
+  role: 'user' | 'model';
+  text: string;
   timestamp: Date;
-  isSystem?: boolean;
 }
 
-export interface FinancialData {
-  transactions: Transaction[];
-  reminders: Reminder[];
-  config: AssistantConfig;
+export interface AppState {
+  appointments: Appointment[];
+  expenses: Expense[];
+  birthdays: Birthday[];
+  messages: Message[];
 }
