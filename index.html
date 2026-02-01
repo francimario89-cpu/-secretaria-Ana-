@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinanciaAI - Ana Secretária</title>
+    <title>Ana - Secretária Financeira</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <script type="importmap">
 {
@@ -24,38 +24,44 @@
 </script>
     
     <script>
-      // Shim para process.env exigido pelo SDK do Gemini
-      window.process = window.process || { env: {} };
+      // Garante que o process.env exista para o SDK do Gemini
+      window.process = { env: { API_KEY: "" } };
       
-      // Captura a chave injetada pelo server.js
-      window.addEventListener('DOMContentLoaded', () => {
+      // Captura a chave injetada pelo servidor
+      window.addEventListener('load', () => {
         if (window.RENDER_ENV && window.RENDER_ENV.API_KEY) {
           window.process.env.API_KEY = window.RENDER_ENV.API_KEY;
-          console.log("Chave API configurada com sucesso.");
+          console.log("Chave configurada.");
         }
       });
-
-      // Tratamento de erros de carregamento
-      window.onerror = function(msg, url, line) {
-        console.error("Erro Crítico:", msg);
-        if (msg.includes('Hook') || msg.includes('react')) {
-          console.warn("Detectado conflito de React. Limpando cache...");
-        }
-      };
     </script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; overflow-x: hidden; }
-        .whatsapp-bg { background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-repeat: repeat; background-attachment: fixed; }
-        .ana-spinner { border-top-color: #10b981; animation: spinner 0.8s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; margin: 0; }
+        .whatsapp-bg { 
+            background-color: #e5ddd5;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
+            background-blend-mode: overlay;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        /* Estilo para a tela de carregamento inicial */
+        #loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #f8fafc;
+        }
     </style>
 </head>
-<body>
+<body class="overflow-hidden">
     <div id="root">
-        <div class="flex flex-col items-center justify-center h-screen bg-slate-50">
-            <div class="w-12 h-12 border-4 border-slate-200 rounded-full ana-spinner mb-4"></div>
-            <p class="text-slate-500 font-bold animate-pulse">Ana está se preparando...</p>
+        <div id="loader">
+            <div class="w-10 h-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+            <p class="text-slate-500 font-bold animate-pulse">Iniciando a Ana...</p>
         </div>
     </div>
     <script type="module" src="index.tsx"></script>
