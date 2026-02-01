@@ -4,38 +4,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinanciaAI - Sua Secretária Financeira</title>
+    <title>FinanciaAI - Ana Secretária</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Babel para ler TSX direto no navegador no Render -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        /* Esconder o root até o Babel terminar de processar */
-        [v-cloak] { display: none; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        #error-display { display: none; position: fixed; top: 0; left: 0; width: 100%; padding: 20px; background: #fee2e2; color: #991b1b; z-index: 9999; font-family: monospace; border-bottom: 2px solid #ef4444; }
     </style>
-<script type="importmap">
+    <script type="importmap">
 {
   "imports": {
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "recharts": "https://esm.sh/recharts@^3.6.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "@google/genai": "https://esm.sh/@google/genai@^1.36.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0"
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "react-router-dom": "https://esm.sh/react-router-dom@7.1.3",
+    "@google/genai": "https://esm.sh/@google/genai@1.3.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
   }
 }
 </script>
 </head>
-<body class="bg-slate-50 text-slate-900">
-    <div id="root"></div>
-    <!-- Carregando o aplicativo -->
-    <script type="text/babel" data-type="module" src="index.tsx"></script>
+<body>
+    <div id="error-display"></div>
+    <div id="root">
+        <div class="flex items-center justify-center h-screen">
+            <div class="text-center">
+                <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-slate-500 font-medium">Ana está se preparando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Captura erros globais para não ficar tela branca sem explicação
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            const display = document.getElementById('error-display');
+            display.style.display = 'block';
+            display.innerHTML = '<b>Erro de Carregamento:</b> ' + msg + '<br><small>Linha: ' + lineNo + '</small>';
+            return false;
+        };
+    </script>
+
+    <!-- Carregamento unificado para evitar erros de importação relativa -->
+    <script type="text/babel" data-type="module" data-presets="react,typescript">
+        import React, { useState, useEffect, useRef, StrictMode } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { HashRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+        import { GoogleGenAI, Type } from "@google/genai";
+
+        // --- 1. CONFIGURAÇÕES E TIPOS ---
+        const API_KEY = window.RENDER_ENV?.API_KEY || "";
+
+        // --- 2. SERVIÇO IA (GEMINI) ---
+        const processMessageWithGemini = async (message, history) => {
+          if (!API_KEY || API_KEY.length < 10) throw new Error("API_KEY_MISSING");
+          
+          const ai = new GoogleGenAI({ apiKey: API_KEY });
+          const systemInstruction = `Você é a Ana, secretária financeira do Francimário. Use tom amigável de WhatsApp, emojis e confirme registros de gastos ou lembretes. Data: ${new Date().toLocaleDateString('pt-BR')}`;
+
+          const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: [
+              ...history.map(h => ({ role: h.role === 'user' ? 'user' : 'model', parts: [{ text: h.content }] })),
+              { role: 'user', parts: [{ text: message }] }
+            ],
+            config: {
+              systemInstruction,
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: Type.OBJECT,
+                properties: {
+                  reply: { type: Type.STRING },
+                  extractedTransaction: {
+                    type: Type.OBJECT,
+                    properties: {
+                      description: { type: Type.STRING },
+                      amount: { type: Type.NUMBER },
+                      type: { type: Type.STRING, enum: ['income', 'expense'] }
+                    }
+                  }
+                },
+                required: ["reply"]
+              }
+            }
+          });
+
+          try {
+            return JSON.parse(response.text);
+          } catch (e) {
+            return { reply: response.text };
+          }
+        };
+
+        // --- 3. COMPONENTES ---
+        const Sidebar = () => {
+          const location = useLocation();
+          return (
+            <div className="w-72 bg-slate-900 h-screen text-white flex flex-col fixed left-0 top-0 z-50 hidden lg:flex">
+              <div className="p-10 border-b border-slate-800/50 text-center">
+                <h1 className="font-black text-2xl italic">FIN<span className="text-emerald-400">AI</span></h1>
+                <p className="text-[10px] text-slate-500 font-bold uppercase mt-2">Gestão Francimário</p>
+              </div>
+              <nav className="flex-1 px-6 space-y-2 mt-8">
+                <Link to="/" className={`flex items-center gap-4 px-6 py-4 rounded-2xl ${location.pathname === '/' ? 'bg-emerald-500 text-slate-900' : 'text-slate-400'}`}>
+                  <i className="fas fa-chart-pie"></i> <span className="font-bold">Dashboard</span>
+                </Link>
+                <Link to="/chat" className={`flex items-center gap-4 px-6 py-4 rounded-2xl ${location.pathname === '/chat' ? 'bg-emerald-500 text-slate-900' : 'text-slate-400'}`}>
+                  <i className="fab fa-whatsapp"></i> <span className="font-bold">Ana (WhatsApp)</span>
+                </Link>
+              </nav>
+            </div>
+          );
+        };
+
+        const Dashboard = () => (
+          <div className="p-8 lg:p-12 max-w-6xl mx-auto">
+            <h2 className="text-4xl font-black text-slate-900 mb-8">Olá, Francimário! 👋</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+              <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
+                <p className="text-slate-400 text-xs font-bold uppercase mb-1">Saldo</p>
+                <p className="text-3xl font-black">R$ 4.250,00</p>
+              </div>
+              <div className="bg-emerald-500 text-white p-8 rounded-[2rem] shadow-lg">
+                <p className="text-emerald-100 text-xs font-bold uppercase mb-1">Ana Avisa</p>
+                <p className="text-xl font-bold">Tudo sob controle por aqui! ✅</p>
+              </div>
+            </div>
+            <Link to="/chat" className="block bg-emerald-100 border-2 border-dashed border-emerald-300 p-8 rounded-[2rem] text-center hover:bg-emerald-200 transition-all">
+               <p className="text-emerald-800 font-bold">Falar com a Ana no WhatsApp agora</p>
+            </Link>
+          </div>
+        );
+
+        const WhatsAppChat = () => {
+          const [messages, setMessages] = useState([{ id: '1', role: 'assistant', content: 'Oi Francimário! Como posso ajudar nas suas finanças?', timestamp: new Date() }]);
+          const [input, setInput] = useState('');
+          const [loading, setLoading] = useState(false);
+          const scrollRef = useRef(null);
+
+          useEffect(() => {
+            if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+          }, [messages]);
+
+          const handleSend = async () => {
+            if (!input.trim() || loading) return;
+            const userMsg = { id: Date.now().toString(), role: 'user', content: input, timestamp: new Date() };
+            setMessages(prev => [...prev, userMsg]);
+            setInput('');
+            setLoading(true);
+
+            try {
+              const res = await processMessageWithGemini(input, messages);
+              setMessages(prev => [...prev, { id: Date.now().toString(), role: 'assistant', content: res.reply, timestamp: new Date() }]);
+            } catch (e) {
+              setMessages(prev => [...prev, { id: 'err', role: 'assistant', content: "⚠️ Verifique se a sua API_KEY está correta no Render!", timestamp: new Date() }]);
+            } finally { setLoading(false); }
+          };
+
+          return (
+            <div className="h-screen flex flex-col bg-[#efeae2]">
+              <header className="bg-[#075e54] text-white p-4 flex items-center gap-4">
+                <Link to="/" className="lg:hidden"><i className="fas fa-arrow-left"></i></Link>
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center overflow-hidden">
+                   <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ana" alt="Ana" />
+                </div>
+                <div><h2 className="font-bold">Ana Secretária</h2><p className="text-[10px] opacity-80">online</p></div>
+              </header>
+              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+                {messages.map(m => (
+                  <div key={m.id} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] p-3 rounded-xl shadow-sm ${m.role === 'user' ? 'bg-[#dcf8c6]' : 'bg-white'}`}>
+                      <p className="text-sm">{m.content}</p>
+                    </div>
+                  </div>
+                ))}
+                {loading && <div className="text-xs text-slate-400 italic">Ana está digitando...</div>}
+              </div>
+              <div className="fixed bottom-0 left-0 lg:left-72 right-0 p-3 bg-white/90 backdrop-blur flex gap-2">
+                <input value={input} onChange={e => setInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} className="flex-1 p-3 bg-slate-100 rounded-full outline-none text-sm" placeholder="Mandar mensagem..." />
+                <button onClick={handleSend} className="w-12 h-12 bg-[#075e54] text-white rounded-full flex items-center justify-center"><i className="fas fa-paper-plane"></i></button>
+              </div>
+            </div>
+          );
+        };
+
+        const App = () => (
+          <Router>
+            <div className="flex bg-slate-50 min-h-screen">
+              <Sidebar />
+              <main className="flex-1 lg:ml-72 min-h-screen">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/chat" element={<WhatsAppChat />} />
+                </Routes>
+              </main>
+            </div>
+          </Router>
+        );
+
+        createRoot(document.getElementById('root')).render(<StrictMode><App /></StrictMode>);
+    </script>
 </body>
 </html>
