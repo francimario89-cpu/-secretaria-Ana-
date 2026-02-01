@@ -1,21 +1,30 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Transaction, Reminder, AssistantConfig } from "../types";
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+import { AssistantConfig } from "../types";
 
 export const processMessageWithGemini = async (
   message: string,
   history: { role: 'user' | 'assistant', content: string }[],
   config: AssistantConfig
 ) => {
+  // Tenta pegar do ambiente do Render injetado ou do process.env padrão
+  const apiKey = (window as any).RENDER_ENV?.API_KEY || process.env.API_KEY;
+
+  if (!apiKey || apiKey === "undefined" || apiKey.length < 10) {
+    throw new Error("API_KEY_MISSING");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
+
   const systemInstruction = `
-    Você é a "${config.name}", uma secretária financeira pessoal no WhatsApp.
+    Você é a "${config.name}", uma secretária financeira pessoal de alto nível no WhatsApp.
     Seu tom é ${config.tone}.
+    Seu cliente é o Francimário.
     Instruções:
-    1. Se o usuário disser um gasto/ganho, confirme e extraia os dados.
-    2. Se o usuário pedir um lembrete, agende.
-    3. Seja concisa como se estivesse no chat do celular.
+    1. Se ele falar de um gasto (ex: "gastei 20 no pão"), responda confirmando o registro de forma amigável.
+    2. Se ele falar de um compromisso ou conta (ex: "lembra de pagar a luz amanhã"), confirme o agendamento.
+    3. Use emojis e linguagem de chat (WhatsApp).
+    4. Seja breve e eficiente.
     
     Data de Hoje: ${new Date().toLocaleDateString('pt-BR')}
   `;
@@ -57,8 +66,9 @@ export const processMessageWithGemini = async (
   });
 
   try {
-    return JSON.parse(response.text);
+    const text = response.text;
+    return JSON.parse(text);
   } catch (e) {
-    return { reply: "Tive um probleminha aqui. Pode mandar de novo?" };
+    return { reply: response.text || "Entendido! Já anotei aqui." };
   }
 };
