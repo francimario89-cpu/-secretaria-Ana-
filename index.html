@@ -15,7 +15,7 @@
     "react": "https://esm.sh/react@18.2.0",
     "react-dom": "https://esm.sh/react-dom@18.2.0",
     "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-    "react-router-dom": "https://esm.sh/react-router-dom@6.11.2",
+    "react-router-dom": "https://esm.sh/react-router-dom@6.11.2?external=react,react-dom",
     "@google/genai": "https://esm.sh/@google/genai@1.3.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/"
@@ -24,16 +24,13 @@
 </script>
     
     <script>
-      // Garante que o process.env exista para o SDK do Gemini
+      // Garante que o process.env exista para o SDK do Gemini antes de qualquer carregamento
       window.process = { env: { API_KEY: "" } };
       
-      // Captura a chave injetada pelo servidor
-      window.addEventListener('load', () => {
-        if (window.RENDER_ENV && window.RENDER_ENV.API_KEY) {
-          window.process.env.API_KEY = window.RENDER_ENV.API_KEY;
-          console.log("Chave configurada.");
-        }
-      });
+      // Captura a chave injetada pelo servidor ou pelo ambiente
+      if (window.RENDER_ENV && window.RENDER_ENV.API_KEY) {
+        window.process.env.API_KEY = window.RENDER_ENV.API_KEY;
+      }
     </script>
 
     <style>
@@ -46,22 +43,21 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
-        /* Estilo para a tela de carregamento inicial */
         #loader {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background: #f8fafc;
+            background: #ffffff;
         }
     </style>
 </head>
 <body class="overflow-hidden">
     <div id="root">
         <div id="loader">
-            <div class="w-10 h-10 border-4 border-slate-200 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
-            <p class="text-slate-500 font-bold animate-pulse">Iniciando a Ana...</p>
+            <div class="w-12 h-12 border-4 border-slate-100 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+            <p class="text-slate-500 font-bold animate-pulse text-sm uppercase tracking-widest">Iniciando a Ana...</p>
         </div>
     </div>
     <script type="module" src="index.tsx"></script>
