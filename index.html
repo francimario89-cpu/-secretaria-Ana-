@@ -22,6 +22,34 @@
   }
 }
 </script>
+    
+    <script>
+      // Shim process.env para compatibilidade com o SDK e o servidor RENDER
+      window.process = window.process || { env: {} };
+      
+      // Captura a chave injetada pelo server.js
+      window.addEventListener('DOMContentLoaded', () => {
+        if (window.RENDER_ENV && window.RENDER_ENV.API_KEY) {
+          window.process.env.API_KEY = window.RENDER_ENV.API_KEY;
+        }
+      });
+
+      // Captura erros globais para evitar tela branca infinita
+      window.onerror = function(msg, url, line) {
+        console.error("Erro Detectado:", msg, "em", url, ":", line);
+        const root = document.getElementById('root');
+        if (root && root.innerText.includes('carregando')) {
+          root.innerHTML = `
+            <div style="padding: 40px; text-align: center; font-family: sans-serif; color: #334155;">
+              <h2 style="color: #ef4444;">Ops! Algo deu errado.</h2>
+              <p>O aplicativo não conseguiu iniciar. Detalhes técnicos no console.</p>
+              <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Tentar Novamente</button>
+            </div>
+          `;
+        }
+      };
+    </script>
+
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; margin: 0; padding: 0; overflow-x: hidden; }
         .whatsapp-bg { background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-repeat: repeat; background-attachment: fixed; }
@@ -31,13 +59,11 @@
 </head>
 <body>
     <div id="root">
-        <!-- Tela de Splash que será substituída pelo React -->
         <div class="flex flex-col items-center justify-center h-screen bg-slate-50">
             <div class="w-12 h-12 border-4 border-slate-200 rounded-full ana-spinner mb-4"></div>
             <p class="text-slate-500 font-bold animate-pulse">Ana está carregando os dados...</p>
         </div>
     </div>
-    <!-- ESTA LINHA ABAIXO É O QUE ESTAVA FALTANDO PARA LIGAR O APP -->
     <script type="module" src="index.tsx"></script>
 </body>
 </html>
