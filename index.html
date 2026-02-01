@@ -24,30 +24,16 @@
 </script>
     
     <script>
-      // Shim process.env para compatibilidade com o SDK e o servidor RENDER
+      // Garante que o process.env existe para o SDK do Gemini
       window.process = window.process || { env: {} };
       
-      // Captura a chave injetada pelo server.js
+      // Sincroniza a chave vinda do Render com o ambiente do App
       window.addEventListener('DOMContentLoaded', () => {
         if (window.RENDER_ENV && window.RENDER_ENV.API_KEY) {
           window.process.env.API_KEY = window.RENDER_ENV.API_KEY;
+          console.log("Configuração de ambiente concluída.");
         }
       });
-
-      // Captura erros globais para evitar tela branca infinita
-      window.onerror = function(msg, url, line) {
-        console.error("Erro Detectado:", msg, "em", url, ":", line);
-        const root = document.getElementById('root');
-        if (root && root.innerText.includes('carregando')) {
-          root.innerHTML = `
-            <div style="padding: 40px; text-align: center; font-family: sans-serif; color: #334155;">
-              <h2 style="color: #ef4444;">Ops! Algo deu errado.</h2>
-              <p>O aplicativo não conseguiu iniciar. Detalhes técnicos no console.</p>
-              <button onclick="location.reload()" style="margin-top: 20px; padding: 12px 24px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">Tentar Novamente</button>
-            </div>
-          `;
-        }
-      };
     </script>
 
     <style>
